@@ -3,8 +3,20 @@ package com.actorgame;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.GridLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
+import com.squareup.picasso.Picasso;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,6 +26,9 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class ConnectionActivity extends AppCompatActivity {
+
+    private final String INFO_ENDPOINT = "https://api.themoviedb.org/3/search/person?api_key=cce092a36f7507dc701d800643e920b5&query="; //wrong api key
+    private final String IMAGE_ENDPOINT = "https://image.tmdb.org/t/p/w100";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,16 +78,71 @@ public class ConnectionActivity extends AppCompatActivity {
         ArrayList<String> path = new ArrayList<>();
         for (Connection<Integer, Integer, String> c : bfs.pathTo(map.get(endActor))) {
             Connection<String, String, String> connection = new Connection<>(reverseMap.get(c.first), reverseMap.get(c.second), c.connection);
+            String firstActor = connection.first.replaceAll("\\s+", "");
+            String secondActor = connection.second.replaceAll("\\s+", "");
+            loadImage(INFO_ENDPOINT + firstActor);
+            loadImage(INFO_ENDPOINT + secondActor);
             path.add(connection.toString());
         }
 
         // add the paths to the ListView
-        ListView pathList = (ListView) findViewById(R.id.pathList);
+        /*ListView pathList = (ListView) findViewById(R.id.pathList);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                 this,
                 android.R.layout.simple_list_item_1,
                 path
         );
         pathList.setAdapter(adapter);
+        */
+
+
+
+        // make a request to tmdb to grab actor images
+        String url = "http://24.media.tumblr.com/tumblr_lzup8rOhm61qbuu1po1_500.jpg";
+        Ion.with(this)
+                .load(url)
+                .asString()
+                .setCallback(new FutureCallback<String>() {
+                    @Override
+                    public void onCompleted(Exception e, String result) {
+                        loadImage("http://24.media.tumblr.com/tumblr_lzup8rOhm61qbuu1po1_500.jpg");
+                        System.out.println(result);
+                    }
+                });
+    }
+
+    private void loadImage(String url) {
+        Ion.with(this)
+                .load(url)
+                .asString()
+                .setCallback(new FutureCallback<String>() {
+                    @Override
+                    public void onCompleted(Exception e, String result) {
+                        try {
+                            JSONObject json = new JSONObject(result);
+                            JSONArray results = json.getJSONArray("results");
+                            JSONObject actorInfo = results.getJSONObject(0);
+                            loadImageFromUrl(actorInfo.getString("profile_path"));
+                        } catch (JSONException jsonE) {
+                            jsonE.printStackTrace();
+                        }
+                    }
+                });
+    }
+
+    private void loadImageFromUrl(String imageUrl) {
+        ImageView imageView = new ImageView(this);
+        System.out.println("hehe");
+        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+        );
+        imageView.setLayoutParams(params);
+        GridLayout ll = (GridLayout) findViewById(R.id.gridLayout);
+        ll.addView(imageView);
+
+        Picasso.with(this)
+                .load(imageUrl)
+                .into(imageView);
     }
 }
