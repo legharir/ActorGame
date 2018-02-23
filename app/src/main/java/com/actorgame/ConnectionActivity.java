@@ -1,14 +1,21 @@
 package com.actorgame;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.media.Image;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Layout;
+import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
@@ -17,6 +24,7 @@ import com.squareup.picasso.Picasso;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -74,15 +82,19 @@ public class ConnectionActivity extends AppCompatActivity {
         String endActor = getIntent().getStringExtra("start");
         BFS bfs = new BFS(G, map.get(startActor));
 
+        // add the title
+        TextView title = (TextView) findViewById(R.id.title);
+        title.setText(startActor + " to " + endActor);
+
         // store the path
         ArrayList<String> path = new ArrayList<>();
         for (Connection<Integer, Integer, String> c : bfs.pathTo(map.get(endActor))) {
             Connection<String, String, String> connection = new Connection<>(reverseMap.get(c.first), reverseMap.get(c.second), c.connection);
-            String firstActor = connection.first.replaceAll("\\s+", "+");
-            String secondActor = connection.second.replaceAll("\\s+", "+");
-            loadImage(INFO_ENDPOINT + firstActor);
-            loadImage(INFO_ENDPOINT + secondActor);
+            connection.first = connection.first.replaceAll("\\s+", "+");
+            connection.second = connection.second.replaceAll("\\s+", "+");
+            System.out.println(INFO_ENDPOINT + connection.first + " " + INFO_ENDPOINT + connection.second);
             path.add(connection.toString());
+            loadConnection(connection);
         }
 
         // add the paths to the ListView
@@ -92,11 +104,29 @@ public class ConnectionActivity extends AppCompatActivity {
                 android.R.layout.simple_list_item_1,
                 path
         );
-        pathList.setAdapter(adapter);
-        */
+        pathList.setAdapter(adapter);*/
+
     }
 
-    private void loadImage(String url) {
+    private void loadConnection(Connection<String, String, String> con) {
+        // create a layout in the form of a row that displays the connection
+        LinearLayout parentLayout = (LinearLayout) findViewById(R.id.parentLayout);
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View connectionRow = inflater.inflate(R.layout.custom_layout, null, false);
+
+        TextView connection = (TextView) connectionRow.findViewById(R.id.connection);
+        ImageView firstActor = (ImageView) connectionRow.findViewById(R.id.firstImage);
+        ImageView secondActor = (ImageView) connectionRow.findViewById(R.id.secondImage);
+
+        // load insert the data from the api call into the view templates
+        connection.setText(con.toString());
+        getActorInfo(INFO_ENDPOINT + con.first, firstActor);
+        getActorInfo(INFO_ENDPOINT + con.second, secondActor);
+        parentLayout.addView(connectionRow);
+    }
+
+    private void getActorInfo(String url, final ImageView imageView) {
         Ion.with(this)
                 .load(url)
                 .asString()
@@ -107,7 +137,8 @@ public class ConnectionActivity extends AppCompatActivity {
                             JSONObject json = new JSONObject(result);
                             JSONArray results = json.getJSONArray("results");
                             JSONObject actorInfo = results.getJSONObject(0);
-                            loadImageFromUrl(IMAGE_ENDPOINT + actorInfo.getString("profile_path"));
+                            String imageURL = IMAGE_ENDPOINT + actorInfo.getString("profile_path");
+                            loadImage(imageURL, imageView);
                         } catch (JSONException jsonE) {
                             jsonE.printStackTrace();
                         }
@@ -115,16 +146,13 @@ public class ConnectionActivity extends AppCompatActivity {
                 });
     }
 
-    private void loadImageFromUrl(String imageUrl) {
+    private void loadImage(String imageUrl, ImageView imageView) {
         System.out.println(imageUrl);
-        ImageView imageView = new ImageView(this);
-        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(
+        /*ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        imageView.setLayoutParams(params);
-        GridLayout ll = (GridLayout) findViewById(R.id.gridLayout);
-        ll.addView(imageView);
+        imageView.setLayoutParams(params);*/
 
         Picasso.with(this)
                 .load(imageUrl)

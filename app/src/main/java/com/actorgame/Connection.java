@@ -15,6 +15,8 @@ public class Connection<K, V, C> {
 
     @Override
     public String toString() {
-        return new String(first + " -> " + second + " (" + connection + ")");
+        String firstStr = first.toString().replaceAll("\\+", " ");
+        String secondStr = second.toString().replaceAll("\\+", " ");
+        return new String(firstStr + " ----> " + secondStr + "\n(" + connection + ")");
     }
 }
