@@ -84,7 +84,7 @@ public class ConnectionActivity extends AppCompatActivity {
 
         // add the title
         TextView title = (TextView) findViewById(R.id.title);
-        title.setText(startActor + " to " + endActor);
+        title.setText(endActor + " to " + startActor);
 
         // store the path
         ArrayList<String> path = new ArrayList<>();
