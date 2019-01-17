@@ -3,5 +3,5 @@ An android application that can show the connection between any two top 5000 act
 
 Demo:
 
-![alt text](https://legharir.github.io/images/actorgame1.png)
-![alt text](https://legharir.github.io/images/actorgame2.png)
+![alt text](https://legharir.github.io/images/actorgame1.png =250x250)
+![alt text](https://legharir.github.io/images/actorgame2.png =250x250)
